@@ -8,10 +8,11 @@ import pandas as pd
 import pytesseract
 import pdfplumber
 from config import *
+from typing import List, Dict, Optional, Union
 pytesseract.pytesseract.tesseract_cmd = r'C:\Users\HumayunN\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 
 #extracting text from pdfs that are images
-def extract_text_from_pdf_pytesseract(pdf_path):
+def extract_text_from_pdf_pytesseract(pdf_path: str) -> str:
     output_text = ""
     try:
         logging.info(f"Starting OCR for: {pdf_path}")
@@ -26,15 +27,15 @@ def extract_text_from_pdf_pytesseract(pdf_path):
                     logging.error(f"OCR failed on page {i} of {pdf_path}: {page_err}")
                     logging.exception(page_err)
         logging.info(f"OCR complete for: {pdf_path}")
-    except Exception as e:
-        logging.error(f"Error during OCR processing of {pdf_path}: {e}")
-        logging.exception(e)
+    except Exception:
+        logging.exception(f"Error during OCR processing of {pdf_path}")
+        
 
     return output_text
 
 
 #extracting texts via pdfplumber
-def extract_texts_from_pdfs(all_pdf_folder):
+def extract_texts_from_pdfs(all_pdf_folder: str) -> None:
     output_dir = extracted_case_text_dir
     os.makedirs(output_dir, exist_ok=True)
 
@@ -66,9 +67,9 @@ def extract_texts_from_pdfs(all_pdf_folder):
                             text = page.extract_text()
                             if text:
                                 extracted_text += f"--- Page {i} ---\n{text}\n"
-                        except Exception as page_err:
-                            logging.error(f"Text extraction failed on page {i} of {filename}: {page_err}")
-                            logging.exception(page_err)
+                        except Exception:
+                            logging.exception(f"Text extraction failed on page {i} of {filename}")
+                            
 
                 if not extracted_text.strip():
                     logging.info(f"No text found in {filename}, falling back to OCR.")
@@ -79,16 +80,16 @@ def extract_texts_from_pdfs(all_pdf_folder):
 
                 logging.info(f"Successfully saved extracted text to: {txt_path}")
 
-            except Exception as e:
-                logging.error(f"Error processing {filename}: {e}")
-                logging.exception(e)
+            except Exception:
+                logging.error(f"Error processing {filename}")
+                # logging.exception()
 
     logging.info(f"All new PDFs processed. Text files saved in: {output_dir}")
 
 
 
 #extracting casetypes
-def extract_case_type_from_folder(folder_path):
+def extract_case_type_from_folder(folder_path: str) -> List[Dict[str, Optional[str]]]:
     logging.info(f"Starting case type extraction from folder: {folder_path}")
     results = []
     successcount = 0
@@ -131,9 +132,9 @@ def extract_case_type_from_folder(folder_path):
                     logging.info(f"Case type extracted for {successcount} no of files")
                     batchcount = 0
         logging.info(f"Completed case type extraction for folder: {folder_path}")
-    except Exception as e:
-        logging.error(f"Error processing folder {folder_path}: {e}")
-        logging.exception(e)
+    except Exception:
+        logging.exception(f"Error processing folder {folder_path}: {e}")
+        
 
     return results
 
@@ -141,7 +142,7 @@ def extract_case_type_from_folder(folder_path):
 
 
 #extracting judges
-def extract_judges_from_folder(folder_path):
+def extract_judges_from_folder(folder_path: str) -> List[Dict[str, str]]:
     logging.info(f"Starting judge extraction from folder: {folder_path}")
     results = []
     successcount = 0
@@ -194,14 +195,14 @@ def extract_judges_from_folder(folder_path):
                     if batchcount == batchcount_print: 
                         logging.info(f"Successfully extracted judges for {successcount} no of files")
                         batchcount = 0
-                except Exception as e:
-                    logging.error(f"Error processing file {filename}: {e}")
-                    logging.exception(e)
+                except Exception:
+                    logging.exception(f"Error processing file {filename}")
+                    
 
         logging.info(f"Completed judge extraction for folder: {folder_path}")
-    except Exception as e:
-        logging.error(f"Error accessing folder {folder_path}: {e}")
-        logging.exception(e)
+    except Exception:
+        logging.exception(f"Error accessing folder {folder_path}")
+        
 
     return results
 
@@ -209,7 +210,7 @@ def extract_judges_from_folder(folder_path):
 
 
 #extracting hearing date
-def extract_hearingdate_from_folder(folder_path):
+def extract_hearingdate_from_folder(folder_path: str) -> List[Dict[str, Union[str, List[str]]]]:
     results = []
     batch_count = 0
     success_count = 0
@@ -317,7 +318,7 @@ def extract_hearingdate_from_folder(folder_path):
 
 
 #extracting case numbers
-def extract_casenumber_from_folder(folder_path):
+def extract_casenumber_from_folder(folder_path: str) -> List[Dict[str, str]]:
     results = []
     successcount = 0
     batchcount = 0
@@ -331,8 +332,8 @@ def extract_casenumber_from_folder(folder_path):
 
     try:
         filenames = os.listdir(folder_path)
-    except Exception as e:
-        logging.error(f"Failed to list directory '{folder_path}': {e}")
+    except Exception:
+        logging.error(f"Failed to list directory '{folder_path}'")
         return results  # Return empty list if folder can't be read
 
     for filename in filenames:
@@ -341,8 +342,8 @@ def extract_casenumber_from_folder(folder_path):
             try:
                 with open(filepath, "r", encoding="utf-8") as f:
                     text = f.read()
-            except Exception as e:
-                logging.error(f"Error reading file '{filepath}': {e}")
+            except Exception:
+                logging.error(f"Error reading file '{filepath}'")
                 continue
             logging.info(f"processing'{filename}' for case number extraction")
             case_number = " "
@@ -355,8 +356,8 @@ def extract_casenumber_from_folder(folder_path):
                         batchcount += 1
                         # logging.info(f"Match found in file '{filename}': {case_number}")
                         break
-            except Exception as e:
-                logging.error(f"Regex error in file '{filename}': {e}")
+            except Exception:
+                logging.error(f"Regex error in file '{filename}'")
 
             results.append({
                 "filename": filename,
@@ -373,7 +374,7 @@ def extract_casenumber_from_folder(folder_path):
 
 
 #extracting case title
-def extract_casetitle_from_folder(folder_path):
+def extract_casetitle_from_folder(folder_path: str) -> List[Dict[str, str]]:
     results = []
     pattern = r'\((.*Jurisdiction\s*)\)'
     successcount = 0
@@ -382,8 +383,8 @@ def extract_casetitle_from_folder(folder_path):
 
     try:
         filenames = os.listdir(folder_path)
-    except Exception as e:
-        logging.error(f"Failed to list directory '{folder_path}': {e}")
+    except Exception:
+        logging.error(f"Failed to list directory '{folder_path}'")
         return results
          
     for filename in filenames:
@@ -392,8 +393,8 @@ def extract_casetitle_from_folder(folder_path):
             try:
                 with open(filepath, "r", encoding="utf-8") as f:
                     text = f.read()
-            except Exception as e:
-                logging.error(f"Error reading file '{filepath}': {e}")
+            except Exception:
+                logging.exception(f"Error reading file '{filepath}'")
                 continue
             logging.info(f"Processing file {filename} for case title extraction")
             case_title = ""
@@ -406,8 +407,8 @@ def extract_casetitle_from_folder(folder_path):
                     # logging.info(f"Match found in '{filename}': {case_title}")
                 else:
                     logging.warning(f"No match found in '{filename}'")
-            except Exception as e:
-                logging.error(f"Regex error in file '{filename}': {e}")
+            except Exception:
+                logging.exception(f"Regex error in file '{filename}'")
 
             results.append({
                 "filename": filename,
@@ -424,7 +425,7 @@ def extract_casetitle_from_folder(folder_path):
 
 
 #extracting respondent name
-def extract_respondentname_from_folder(folder_path):
+def extract_respondentname_from_folder(folder_path: str) -> List[Dict[str, str]]:
     results = []
     successcount = 0
     batchcount = 0
@@ -437,8 +438,8 @@ def extract_respondentname_from_folder(folder_path):
 
     try:
         filenames = os.listdir(folder_path)
-    except Exception as e:
-        logging.error(f"Failed to list directory '{folder_path}': {e}")
+    except Exception:
+        logging.exception(f"Failed to list directory '{folder_path}'")
         return results
 
     for filename in filenames:
@@ -447,8 +448,8 @@ def extract_respondentname_from_folder(folder_path):
             try:
                 with open(filepath, "r", encoding="utf-8") as f:
                     text = f.read()
-            except Exception as e:
-                logging.error(f"Error reading file '{filepath}': {e}")
+            except Exception:
+                logging.error(f"Error reading file '{filepath}'")
                 continue
             logging.info(f"Processing file {filename} for respondent name extraction")
             respondent = ""
@@ -462,8 +463,8 @@ def extract_respondentname_from_folder(folder_path):
                     # logging.info(f"Match found in '{filename}")
                 else:
                     logging.warning(f"No respondent match found in '{filename}'")
-            except Exception as e:
-                logging.error(f"Regex error in file '{filename}': {e}")
+            except Exception:
+                logging.exception(f"Regex error in file '{filename}'")
 
             results.append({
                 "filename": filename,
@@ -480,7 +481,7 @@ def extract_respondentname_from_folder(folder_path):
 
 
 #extracting petitioner name
-def extract_petitionername_from_folder(folder_path):
+def extract_petitionername_from_folder(folder_path: str) -> List[Dict[str, str]]:
     results = []
     successcount = 0
     batchcount = 0
@@ -497,8 +498,8 @@ def extract_petitionername_from_folder(folder_path):
 
     try:
         filenames = os.listdir(folder_path)
-    except Exception as e:
-        logging.error(f"Failed to list directory '{folder_path}': {e}")
+    except Exception:
+        logging.exception(f"Failed to list directory '{folder_path}'")
         return results
 
     for filename in filenames:
@@ -509,8 +510,8 @@ def extract_petitionername_from_folder(folder_path):
             try:
                 with open(filepath, "r", encoding="utf-8") as f:
                     text = f.read()
-            except Exception as e:
-                logging.error(f"Error reading file '{filepath}': {e}")
+            except Exception:
+                logging.exception(f"Error reading file '{filepath}'")
                 continue
 
             # Remove jurisdiction parentheticals before searching
@@ -528,8 +529,8 @@ def extract_petitionername_from_folder(folder_path):
                     # logging.info(f"Match found in '{filename}'")
                 else:
                     logging.warning(f"No petitioner name match found in '{filename}'")
-            except Exception as e:
-                logging.error(f"Regex error in file '{filename}': {e}")
+            except Exception:
+                logging.exception(f"Regex error in file '{filename}'")
 
             results.append({
                 "filename": filename,
@@ -546,7 +547,7 @@ def extract_petitionername_from_folder(folder_path):
 
 
 #extracting citations
-def extract_citations_from_folder(folder_path):
+def extract_citations_from_folder(folder_path: str) -> List[Dict[str, List[str]]]:
     results = []
     successcount = 0
     batchcount = 0
